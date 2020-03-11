@@ -12,11 +12,11 @@ steps:
     commands:
       - bash generate-version.sh
       - cat platform/viewer/public/version.json
-    #when:
-    #  branch:
-    #    - develop
-    #    - master
-    #  event: push
+    when:
+      branch:
+        - develop
+        - master
+      event: push
 
   - name: publish_app_develop
     pull: always
@@ -29,9 +29,9 @@ steps:
       repo: registry-intl.ap-southeast-5.aliyuncs.com/imdglobalservices/sirs-dicom-viewer
       tags: latest
       registry: registry-intl.ap-southeast-5.aliyuncs.com
-    #when:
-    #  branch: develop
-    #  event: push
+    when:
+      branch: develop
+      event: push
 
   - name: publish_app_release
     pull: always
@@ -51,10 +51,10 @@ steps:
 
   - name: notify
     image: plugins/slack
-    #when:
-    #  status: [ success, failure ]
-    #  branch: develop
-    #  event: push
+    when:
+      status: [ success, failure ]
+      branch: develop
+      event: push
     settings:
       webhook:
         from_secret: SLACK_WEBHOOK
