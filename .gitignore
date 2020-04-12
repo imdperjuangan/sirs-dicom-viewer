@@ -34,3 +34,5 @@ screenshots/
 
 # Locize settings
 .locize
+
+platform/viewer/public/medinesia-local.js

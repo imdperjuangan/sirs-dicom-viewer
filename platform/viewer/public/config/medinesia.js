@@ -1,10 +1,16 @@
-window.config = {
+const config = {
   // default: '/'
   routerBasename: '/',
   whiteLabelling: {},
   extensions: [],
   showStudyList: true,
   filterQueryParam: false,
+  oss: {
+    region: '<OSS_REGION>',
+    accessKeyId: '<OSS_ACCESS_KEY_ID>',
+    accessKeySecret: '<OSS_ACCESS_KEY_SECRET>',
+    bucket: '<OSS_BUCKET>'
+  },
   servers: {
     dicomWeb: [
       {
@@ -20,3 +26,5 @@ window.config = {
     ]
   }
 }
+
+window.config = config

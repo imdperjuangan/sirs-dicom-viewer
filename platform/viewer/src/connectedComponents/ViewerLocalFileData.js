@@ -1,4 +1,4 @@
-import React, { Component } from 'react';
+import React, { Component, useContext } from 'react';
 import { metadata, utils } from '@ohif/core';
 
 import ConnectedViewer from './ConnectedViewer.js';
@@ -9,6 +9,9 @@ import filesToStudies from '../lib/filesToStudies';
 import './ViewerLocalFileData.css';
 import { withTranslation } from 'react-i18next';
 import axios from 'axios';
+import OSS from 'ali-oss';
+import queryString from 'querystring';
+import AppContext from '../context/AppContext';
 
 const { OHIFStudyMetadata } = metadata;
 const { studyMetadataManager, updateMetaDataManager } = utils;
@@ -52,6 +55,7 @@ const linksDialogMessage = (onDrop, i18n) => {
 };
 
 class ViewerLocalFileData extends Component {
+  static contextType = AppContext
   static propTypes = {
     studies: PropTypes.array,
   };
@@ -64,35 +68,71 @@ class ViewerLocalFileData extends Component {
 
   componentDidMount () {
     const { params } = this.props.match
+    const urlParam = queryString.parse(this.props.location.search.replace('?', ''))
+    const { kind, stsToken } = urlParam
     if (params) {
-      const { imgUrl } = params
+      let { imgUrl } = params
+      imgUrl = imgUrl.replace(this.props.location.search, '')
       if (imgUrl) {
         this.setState({
           loading: true
         })
 
-        axios.get(decodeURIComponent(imgUrl), {
-          responseType: 'blob',
-          headers: {
-            'Content-Type': 'application/dicom',
-          }
-        }).then(response => {
-          return filesToStudies([response.data])
-        }).then(studies => {
-          const updatedStudies = this.updateStudies(studies);
+        if (!kind || kind === 'file') {
+          axios.get(decodeURIComponent(imgUrl), {
+            responseType: 'blob',
+            headers: {
+              'Content-Type': 'application/dicom',
+            }
+          }).then(response => {
+            return filesToStudies([response.data])
+          }).then(studies => {
+            const updatedStudies = this.updateStudies(studies);
 
-          if (!updatedStudies) {
+            if (!updatedStudies) {
+              this.setState({
+                loading: false
+              })
+            } else {
+              this.setState({ studies: updatedStudies, loading: false });
+            }
+          }).catch(e => {
             this.setState({
               loading: false
             })
-          } else {
-            this.setState({ studies: updatedStudies, loading: false });
-          }
-        }).catch(e => {
-          this.setState({
-            loading: false
           })
-        })
+        } else if (kind === 'folder') {
+          if (this.context.appConfig.oss.bucket) {
+            const ossConfig = this.context.appConfig.oss
+            ossConfig.stsToken = stsToken
+            const client = new OSS(this.context.appConfig.oss)
+
+            client.list({
+              prefix: decodeURIComponent(imgUrl)
+            }).then(result => {
+              Promise.all(result.objects.filter(object => object.name.indexOf('__MACOSX') === -1 && object.size > 0).map(object => {
+                return client.get(object.name)
+              })).then(objects => {
+                const contents = objects.map(object => {
+                  const blobFile = new Blob([object.content])
+                  return new File([blobFile], 'name')
+                })
+
+                return filesToStudies(contents);
+              }).then(studies => {
+                const updatedStudies = this.updateStudies(studies);
+
+                if (!updatedStudies) {
+                  this.setState({
+                    loading: false
+                  })
+                } else {
+                  this.setState({ studies: updatedStudies, loading: false });
+                }
+              })
+            })
+          }
+        }
       }
     }
   }
@@ -133,6 +173,7 @@ class ViewerLocalFileData extends Component {
 
   render() {
     const onDrop = async acceptedFiles => {
+      console.log(acceptedFiles)
       this.setState({ loading: true });
 
       const studies = await filesToStudies(acceptedFiles);

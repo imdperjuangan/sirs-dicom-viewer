@@ -107,7 +107,6 @@ class OHIFStandaloneViewer extends Component {
      * See http://reactcommunity.org/react-transition-group/with-react-router/
      */
     const routes = RoutesUtil.getRoutes(appConfig);
-    console.log(appConfig, routes)
 
     const currentPath = this.props.location.pathname;
     const noMatchingRoutes = !routes.find(r =>
