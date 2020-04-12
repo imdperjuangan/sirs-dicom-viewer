@@ -28,6 +28,32 @@ if [ -n "$CLIENT_ID" ] || [ -n "$HEALTHCARE_API_ENDPOINT" ]
 	  cp /usr/share/nginx/html/google.js /usr/share/nginx/html/app-config.js
 fi
 
+EMPTY=""
+
+if [ -n "$OSS_BUCKET" ]; then
+    sed -i -e "s+<OSS_BUCKET>+$OSS_BUCKET+g" /usr/share/nginx/html/medinesia.js
+else
+    sed -i -e "s+<OSS_BUCKET>+$EMPTY+g" /usr/share/nginx/html/medinesia.js
+fi
+
+if [ -n "$OSS_REGION" ]; then
+    sed -i -e "s+<OSS_REGION>+$OSS_REGION+g" /usr/share/nginx/html/medinesia.js
+else
+    sed -i -e "s+<OSS_REGION>+$EMPTY+g" /usr/share/nginx/html/medinesia.js
+fi
+
+if [ -n "$OSS_ACCESS_KEY_ID" ]; then
+    sed -i -e "s+<OSS_ACCESS_KEY_ID>+$OSS_ACCESS_KEY_ID+g" /usr/share/nginx/html/medinesia.js
+else
+    sed -i -e "s+<OSS_ACCESS_KEY_ID>+$EMPTY+g" /usr/share/nginx/html/medinesia.js
+fi
+
+if [ -n "$OSS_ACCESS_KEY_SECRET" ]; then
+    sed -i -e "s+<OSS_ACCESS_KEY_SECRET>+$OSS_ACCESS_KEY_SECRET+g" medinesia.js
+else
+    sed -i -e "s+<OSS_ACCESS_KEY_SECRET>+$EMPTY+g" medinesia.js
+fi
+
 echo "Starting Nginx to serve the OHIF Viewer..."
 
 exec "$@"
