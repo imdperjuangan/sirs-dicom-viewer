@@ -108,7 +108,8 @@ class ViewerLocalFileData extends Component {
             const client = new OSS(this.context.appConfig.oss)
 
             client.list({
-              prefix: decodeURIComponent(imgUrl)
+              prefix: decodeURIComponent(imgUrl),
+              'max-keys': 1000
             }).then(result => {
               Promise.all(result.objects.filter(object => object.name.indexOf('__MACOSX') === -1 && object.size > 0).map(object => {
                 return client.get(object.name)
@@ -129,6 +130,10 @@ class ViewerLocalFileData extends Component {
                 } else {
                   this.setState({ studies: updatedStudies, loading: false });
                 }
+              }).catch(e => {
+                this.setState({
+                  loading: false
+                })
               })
             })
           }
