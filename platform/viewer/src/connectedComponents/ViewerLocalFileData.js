@@ -69,7 +69,7 @@ class ViewerLocalFileData extends Component {
   componentDidMount () {
     const { params } = this.props.match
     const urlParam = queryString.parse(this.props.location.search.replace('?', ''))
-    const { kind, stsToken } = urlParam
+    const { kind, region, bucket, stsToken, accessKeyId, accessKeySecret } = urlParam
     if (params) {
       let { imgUrl } = params
       imgUrl = imgUrl.replace(this.props.location.search, '')
@@ -102,13 +102,18 @@ class ViewerLocalFileData extends Component {
             })
           })
         } else if (kind === 'folder') {
-          if (this.context.appConfig.oss.bucket) {
-            const ossConfig = this.context.appConfig.oss
-            ossConfig.stsToken = stsToken
-            const client = new OSS(this.context.appConfig.oss)
+          let folderUrl = decodeURIComponent(imgUrl)
+          if (bucket) {
+            const client = new OSS({
+              region,
+              bucket,
+              accessKeyId,
+              accessKeySecret,
+              stsToken
+            })
 
             client.list({
-              prefix: decodeURIComponent(imgUrl),
+              prefix: folderUrl,
               'max-keys': 1000
             }).then(result => {
               Promise.all(result.objects.filter(object => object.name.indexOf('__MACOSX') === -1 && object.size > 0).map(object => {

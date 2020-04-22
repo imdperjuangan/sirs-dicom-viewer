@@ -5,12 +5,6 @@ const config = {
   extensions: [],
   showStudyList: true,
   filterQueryParam: false,
-  oss: {
-    region: 'oss-ap-southeast-5',
-    accessKeyId: 'LTAI4Fn7wdpprMTKba8B6Xxx',
-    accessKeySecret: 'AbIkPcOZ2udyOgNQIlaODCggWAnSkY',
-    bucket: 'sirs-dev'
-  },
   servers: {
     dicomWeb: [
       {
