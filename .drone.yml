@@ -18,5 +18,5 @@ steps:
       tags: latest
       registry: registry-intl.ap-southeast-5.aliyuncs.com
     when:
-      branch: develop
+      branch: master
       event: push
