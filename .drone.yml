@@ -14,8 +14,8 @@ steps:
         from_secret: DOCKER_USERNAME
       password:
         from_secret: DOCKER_PASSWORD
-          repo: registry-intl.ap-southeast-5.aliyuncs.com/covid-detector/covid-detector-dicom-viewer
-          tags: latest
+      repo: registry-intl.ap-southeast-5.aliyuncs.com/covid-detector/covid-detector-dicom-viewer
+      tags: latest
       registry: registry-intl.ap-southeast-5.aliyuncs.com
     when:
       branch: develop
