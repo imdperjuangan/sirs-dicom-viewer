@@ -64,6 +64,10 @@ class ViewerLocalFileData extends Component {
     studies: null,
     loading: false,
     error: null,
+    loadingProgress: {
+      total: 0,
+      progress: 0
+    }
   };
 
   componentDidMount () {
@@ -109,15 +113,32 @@ class ViewerLocalFileData extends Component {
               bucket,
               accessKeyId,
               accessKeySecret,
-              stsToken
+              stsToken,
+              timeout: '360s'
             })
 
             client.list({
               prefix: folderUrl,
               'max-keys': 1000
             }).then(result => {
-              Promise.all(result.objects.filter(object => object.name.indexOf('__MACOSX') === -1 && object.size > 0).map(object => {
-                return client.get(object.name)
+              const files = result.objects.filter(object => object.name.indexOf('__MACOSX') === -1 && object.size > 0)
+              this.setState({
+                loadingProgress: {
+                  ...this.state.loadingProgress,
+                  total: files.length
+                }
+              })
+              let count = 0
+              Promise.all(files.map(object => {
+                return client.get(object.name).then(objects => {
+                  this.setState({
+                    loadingProgress: {
+                      ...this.state.loadingProgress,
+                      progress: ++count
+                    }
+                  })
+                  return Promise.resolve(objects)
+                })
               })).then(objects => {
                 const contents = objects.map(object => {
                   const blobFile = new Blob([object.content])
@@ -136,9 +157,12 @@ class ViewerLocalFileData extends Component {
                   this.setState({ studies: updatedStudies, loading: false });
                 }
               }).catch(e => {
-                this.setState({
-                  loading: false
-                })
+                return Promise.reject(e)
+              })
+            }).catch(e => {
+              this.setState({
+                error: e.message,
+                loading: false
               })
             })
           }
@@ -183,8 +207,7 @@ class ViewerLocalFileData extends Component {
 
   render() {
     const onDrop = async acceptedFiles => {
-      console.log(acceptedFiles)
-      this.setState({ loading: true });
+      this.setState({ error: null, loading: true });
 
       const studies = await filesToStudies(acceptedFiles);
       const updatedStudies = this.updateStudies(studies);
@@ -195,10 +218,6 @@ class ViewerLocalFileData extends Component {
 
       this.setState({ studies: updatedStudies, loading: false });
     };
-
-    if (this.state.error) {
-      return <div>Error: {JSON.stringify(this.state.error)}</div>;
-    }
 
     return (
       <Dropzone onDrop={onDrop} noClick>
@@ -216,8 +235,9 @@ class ViewerLocalFileData extends Component {
             ) : (
               <div className={'drag-drop-instructions'}>
                 <div className={'drag-drop-contents'}>
+                  {this.state.error && <h3>Error: {JSON.stringify(this.state.error)}</h3>}
                   {this.state.loading ? (
-                    <h3>{this.props.t('Loading...')}</h3>
+                    <h3>{this.props.t('Loading...')} {this.state.loadingProgress.progress}/{this.state.loadingProgress.total}</h3>
                   ) : (
                     <>
                       <h3>
